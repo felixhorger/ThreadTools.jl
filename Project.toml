@@ -1,0 +1,4 @@
+name = "ThreadTools"
+uuid = "cc317207-7d95-483f-9fc7-ca51f6095191"
+authors = ["Felix Horger <felix.horger@kcl.ac.uk>"]
+version = "0.1.0"
