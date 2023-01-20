@@ -27,7 +27,7 @@ module ThreadTools
 			t = argmin(length.(split_idx))
 			@views append!(split_idx[t], idx[blocks[p]:blocks[p+1]-1])
 		end
-		return split_idx, block_lengths
+		return split_idx
 	end
 
 end
