@@ -1,7 +1,26 @@
 
 module ThreadTools
 	
-	export safe_split_threads
+	export safe_split_threads, @letblock, @threads
+
+	"""
+		@letblock a b c expr
+
+		gives
+
+		let a=a, b=b, c=c
+			\$expr
+		end
+	"""
+	macro letblock(args...)
+		vars = @views args[1:end-1]
+		expr = args[end]
+		return esc(quote
+			let $((Expr(:(=), v, v) for v in vars)...)
+				$expr
+			end
+		end)
+	end
 
 	"""
 		no need to sort idx
@@ -47,6 +66,46 @@ module ThreadTools
 			@views append!(split_idx[t], idx[blocks[p]:blocks[p+1]-1])
 		end
 		return sort.(split_idx)
+	end
+
+
+	"""
+		Only works for indexable iterators
+		prep_vars is a tuple of symbols
+		prep_vars = prep_func()
+	"""
+	macro threads(prep_vars, prep_func, loop)
+		# TODO: check if loop is loop
+		iter_var, iter = loop.args[1].args
+		body = loop.args[2]
+		return quote
+			let niter, nthreads, per_thread
+				niter = length($(esc(iter)))
+				nthreads = min(Threads.nthreads(), niter)
+				per_thread = niter ÷ nthreads
+				$(macroexpand(Main, quote
+				@sync for tid = 1:nthreads
+					Threads.@spawn let per_thread=per_thread, start
+						start = per_thread * (tid - 1)
+						rem = mod(niter, nthreads)
+						if tid ≤ rem
+							per_thread += 1
+							start += tid-1
+						else
+							start += rem
+						end
+						let $(esc.(prep_vars.args)...)
+							$(esc(prep_vars)) = $(esc(prep_func))()
+							for i = start+1 : start+per_thread
+								local $(esc(iter_var)) = @inbounds $iter[i]
+								$(esc(body))
+							end
+						end
+					end
+				end
+				end))
+			end
+		end
 	end
 
 end
