@@ -2,10 +2,12 @@
 using Revise
 using ThreadTools
 
-idx = mod1.(rand(Int, 3, 1000000), 300)
+idx = mod1.(rand(Int, 3, 100000), 256)
 idx = [CartesianIndex(idx[:, i]...) for i in axes(idx, 2)]
 
-@time splits = safe_split_threads(idx, (1, 3), 4);
+@time splits = safe_split_threads(idx, (1, 2), 20);
+
+@code_warntype safe_split_threads(idx, (1, 2), 20);
 
 
 i = splits[1][1]
