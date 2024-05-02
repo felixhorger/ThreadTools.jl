@@ -24,6 +24,7 @@ module ThreadTools
 
 	"""
 		no need to sort idx
+		TODO: description
 	"""
 	function safe_split_threads(
 		idx::AbstractVector{CartesianIndex{N}},
@@ -72,6 +73,7 @@ module ThreadTools
 	end
 
 	"""
+	should be achievable with Iterators.partition
 	"""
 	function thread_region(
 		tid::Integer,
